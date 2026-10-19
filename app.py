@@ -4,13 +4,12 @@ Metodología: guía para construir un Sistema Experto
   (variables -> diagrama de dependencias -> reglas IF-THEN -> interfaz)
 Motor: encadenamiento hacia adelante (forward chaining) con explicación de reglas disparadas.
 
-Ejecutar:  streamlit run app.py
+Ejecutar localmente:  streamlit run app.py
 """
 import streamlit as st
 
 # =====================================================================
-#  1. VARIABLES DE ENTRADA (hechos que se le preguntan al usuario)
-#     clave -> (pregunta, {valor: etiqueta})
+#  1. VARIABLES DE ENTRADA
 # =====================================================================
 SN = {"no": "No", "si": "Sí"}
 PREGUNTAS = {
@@ -32,20 +31,14 @@ PREGUNTAS = {
                  {"corta": "4 días o menos", "media": "5 a 14 días", "larga": "Más de 14 días"}),
 }
 
-
 # =====================================================================
-#  2. BASE DE CONOCIMIENTO (reglas SI-ENTONCES)
-#     "si": {variable: {valores permitidos}}   (todas deben cumplirse = AND)
-#     "entonces": (variable, valor)
-#     Reglas intermedias: alarma, atencion.  Regla final: dx (diagnósticos).
-#     Para variables intermedias, la PRIMERA regla que concluye gana
-#     (las reglas están ordenadas de mayor a menor prioridad).
+#  2. BASE DE CONOCIMIENTO (Reglas SI-ENTONCES)
 # =====================================================================
 def R(id_, si, entonces):
     return {"id": id_, "si": si, "entonces": entonces}
 
 REGLAS = [
-    # ---- Etapa 1: nivel de alarma respiratoria (intermedia) ----------
+    # ---- Etapa 1: Nivel de alarma respiratoria (intermedia) ----------
     R("A1", {"signos_alarma": {"si"}}, ("alarma", "alta")),
     R("A2", {"disnea": {"reposo"}}, ("alarma", "alta")),
     R("A3", {"dolor_toracico": {"si"}, "disnea": {"esfuerzo"}}, ("alarma", "alta")),
@@ -53,9 +46,9 @@ REGLAS = [
     R("A5", {"dolor_toracico": {"si"}}, ("alarma", "moderada")),
     R("A6", {"sibilancias": {"si"}}, ("alarma", "moderada")),
     R("A7", {"fiebre": {"alta"}, "tos": {"flema"}}, ("alarma", "moderada")),
-    R("A8", {}, ("alarma", "baja")),  # por defecto
+    R("A8", {}, ("alarma", "baja")),  # Regla por defecto
 
-    # ---- Etapa 2: diagnósticos presuntivos ---------------------------
+    # ---- Etapa 2: Diagnósticos presuntivos ---------------------------
     R("D1", {"fiebre": {"alta"}, "tos": {"flema"}, "disnea": {"esfuerzo", "reposo"}},
       ("dx", "neumonia")),
     R("D2", {"fiebre": {"alta"}, "dolor_toracico": {"si"}, "tos": {"seca", "flema"}},
@@ -74,7 +67,7 @@ REGLAS = [
               "fiebre": {"ninguna", "leve"}, "disnea": {"no"}}, ("dx", "bronquitis")),
     R("D11", {"tos": {"seca", "flema"}, "duracion": {"larga"}}, ("dx", "tos_prolongada")),
 
-    # ---- Etapa 3: nivel de atención recomendado (intermedia/final) ---
+    # ---- Etapa 3: Nivel de atención recomendado -----------------------
     R("T1", {"alarma": {"alta"}}, ("atencion", "urgencias")),
     R("T2", {"alarma": {"moderada"}}, ("atencion", "pronta")),
     R("T3", {"alarma": {"baja"}, "riesgo": {"si"}}, ("atencion", "pronta")),
@@ -83,11 +76,10 @@ REGLAS = [
 ]
 
 # =====================================================================
-#  3. MOTOR DE INFERENCIA (encadenamiento hacia adelante)
+#  3. MOTOR DE INFERENCIA (Forward Chaining)
 # =====================================================================
 def cumple(cond, hechos):
     return all(v in hechos and hechos[v] in permitidos for v, permitidos in cond.items())
-
 
 def inferir(hechos_iniciales):
     hechos, dx, traza, disparadas = dict(hechos_iniciales), [], [], set()
@@ -101,7 +93,7 @@ def inferir(hechos_iniciales):
             if var == "dx":
                 if val not in dx:
                     dx.append(val)
-            elif var in hechos:        # ya la fijó una regla de mayor prioridad
+            elif var in hechos:  # Ya fue fijada por regla de mayor prioridad
                 continue
             else:
                 hechos[var] = val
@@ -110,7 +102,6 @@ def inferir(hechos_iniciales):
             cambio = True
     return hechos, dx, traza
 
-
 def texto_regla(r):
     if r["si"]:
         cond = " Y ".join(f"{v} = {' o '.join(sorted(vals))}" for v, vals in r["si"].items())
@@ -118,7 +109,6 @@ def texto_regla(r):
         cond = "(ninguna otra regla aplicó)"
     var, val = r["entonces"]
     return f"SI {cond} ENTONCES {var} = {val}"
-
 
 # =====================================================================
 #  4. TEXTOS DE SALIDA
@@ -155,7 +145,6 @@ ATENCION = {
                     "Reposo, buena hidratación y ventilar los ambientes. "
                     "Consulte si aparece fiebre alta, dificultad para respirar o si no mejora en unos días."),
 }
-
 
 # =====================================================================
 #  5. INTERFAZ (Streamlit)
@@ -203,7 +192,6 @@ def main():
     with st.expander("Ver la base de conocimiento completa"):
         for r in REGLAS:
             st.code(f"{r['id']}: {texto_regla(r)}", language=None)
-
 
 if __name__ == "__main__":
     main()
