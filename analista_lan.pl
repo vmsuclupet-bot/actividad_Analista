@@ -1,11 +1,4 @@
-% =====================================================================
-%  SISTEMA EXPERTO PARA LA ASIGNACION DE UN ANALISTA DE REDES LAN
-%  Caso: Analista Red LAN  (Inteligencia Artificial 2)
-%
-%  Uso en SWISH (swish.swi-prolog.org):
-%     ?- analista.
-%  Responda cada pregunta con un numero terminado en punto. Ej:  50.
-% =====================================================================
+============================
 
 % ---------------------------------------------------------------------
 %  PROGRAMA PRINCIPAL (interfaz de usuario)
@@ -29,7 +22,7 @@ pregunta(Texto, Tipo, Valor) :-
     ->  Valor = V
     ;   V == end_of_file
     ->  fail
-    ;   write('  Dato invalido, intente de nuevo.'), nl,
+    ;   write(' Dato invalido, intente de nuevo.'), nl,
         pregunta(Texto, Tipo, Valor)
     ).
 
@@ -100,8 +93,6 @@ nivel_costo(FC, alto)      :- FC > 1.5.
 
 % ---------------------------------------------------------------------
 %  TRIANGULO 1: REGLAS FINALES (conjunto de reglas del Paso 5)
-%  tipo_analista(NivelPresupuesto, Tamano, NivelCosto, Tipo)
-%  El nivel de costo es "_" cuando la regla acepta los tres valores.
 % ---------------------------------------------------------------------
 
 % RULE 1
